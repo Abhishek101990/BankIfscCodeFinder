@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bank IFSC Code Finder</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+
+  <header class="bg-blue-700 text-white p-4 text-center text-xl font-semibold shadow-md">
+    Bank IFSC, MICR & SWIFT Code Finder
+  </header>
+
+  <main class="max-w-3xl mx-auto p-6 bg-white mt-6 rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold mb-4 text-blue-700">Search Bank Details</h2>
+
+    <!-- Search Method Selection -->
+    <div class="mb-4">
+      <label class="inline-flex items-center mr-4">
+        <input type="radio" name="searchMode" value="ifsc" checked onchange="toggleSearchMode()" class="mr-2" />
+        Search by IFSC Code
+      </label>
+      <label class="inline-flex items-center text-gray-400 cursor-not-allowed">
+        <input type="radio" name="searchMode" value="location" disabled class="mr-2" />
+        (Location search disabled – API not available)
+      </label>
+    </div>
+
+    <!-- Search by IFSC -->
+    <div id="ifscSearch">
+      <input type="text" id="ifscCode" placeholder="Enter IFSC Code (e.g., HDFC0000123)" class="border p-2 rounded w-full mt-2" />
+    </div>
+
+    <!-- Search Button -->
+    <button onclick="searchBank()" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
+      Search
+    </button>
+
+    <!-- Result Display -->
+    <div id="result" class="mt-6 hidden border-t pt-4">
+      <h3 class="text-lg font-semibold mb-2">Branch Details:</h3>
+      <p><strong>Bank:</strong> <span id="resBank">---</span></p>
+      <p><strong>Branch:</strong> <span id="resBranch">---</span></p>
+      <p><strong>IFSC:</strong> <span id="resIfsc">---</span></p>
+      <p><strong>MICR:</strong> <span id="resMicr">---</span></p>
+      <p><strong>SWIFT:</strong> <span id="resSwift">---</span></p>
+      <p><strong>Address:</strong> <span id="resAddress">---</span></p>
+    </div>
+
+    <div id="errorMsg" class="text-red-600 mt-4 hidden">Invalid IFSC Code or not found.</div>
+  </main>
+
+  <script>
+    function toggleSearchMode() {
+      // Only IFSC mode available now
+    }
+
+    async function searchBank() {
+      const ifsc = document.getElementById('ifscCode').value.trim().toUpperCase();
+      if (!ifsc) {
+        alert("Please enter an IFSC Code.");
+        return;
+      }
+
+      const resultDiv = document.getElementById('result');
+      const errorDiv = document.getElementById('errorMsg');
+
+      resultDiv.classList.add('hidden');
+      errorDiv.classList.add('hidden');
+
+      try {
+        const res = await fetch(`https://ifsc.razorpay.com/${ifsc}`);
+        if (!res.ok) throw new Error("Invalid IFSC");
+
+        const data = await res.json();
+
+        document.getElementById('resBank').innerText = data.BANK;
+        document.getElementById('resBranch').innerText = data.BRANCH;
+        document.getElementById('resIfsc').innerText = data.IFSC;
+        document.getElementById('resMicr').innerText = data.MICR || "Not available";
+        document.getElementById('resSwift').innerText = "N/A (Use branch site)";
+        document.getElementById('resAddress').innerText = `${data.ADDRESS}, ${data.CITY}, ${data.STATE}, ${data.PINCODE}`;
+
+        resultDiv.classList.remove('hidden');
+      } catch (error) {
+        errorDiv.classList.remove('hidden');
+      }
+    }
+  </script>
+
+</body>
+</html>
